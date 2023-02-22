@@ -1,6 +1,8 @@
 from sqlalchemy import *
 from sqlalchemy.orm import sessionmaker, declarative_base
 
+Base = declarative_base()
+
 
 class Database:
     name = "mysql+pymysql"
@@ -19,5 +21,5 @@ class Database:
         with session() as db:
             yield db
 
-
-Base = declarative_base()
+    def make_tables(self):
+        Base.metadata.create_all(bind=self.engine)
