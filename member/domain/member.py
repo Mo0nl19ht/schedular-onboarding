@@ -8,6 +8,8 @@ class Member(BaseEntity):
     __table_args__ = {"extend_existing": True}
     __abstract__ = True
 
+    loing_id = Column(String(255))
+    name = Column(String(255))
     email = Column(String(255))
     hashed_password = Column(String(255))
     type = Column(String(255))
