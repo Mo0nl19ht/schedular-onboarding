@@ -14,33 +14,11 @@ class UserController:
         self.router = APIRouter(prefix="/v1/user")
         self.user_service = user_service
 
-        self.router.add_api_route(
-            "", self.create, methods=["POST"], status_code=status.HTTP_201_CREATED
-        )
-        self.router.add_api_route(
-            "/{login_id}",
-            self.delete,
-            methods=["DELETE"],
-            status_code=status.HTTP_200_OK,
-        )
-        self.router.add_api_route(
-            "/{login_id}",
-            self.update,
-            methods=["put"],
-            status_code=status.HTTP_200_OK,
-        )
-        self.router.add_api_route(
-            "/{login_id}",
-            self.find_by_login_id,
-            methods=["get"],
-            status_code=status.HTTP_200_OK,
-        )
-        self.router.add_api_route(
-            "/login",
-            self.login,
-            methods=["post"],
-            status_code=status.HTTP_200_OK,
-        )
+        self.router.add_api_route("", self.create, methods=["POST"])
+        self.router.add_api_route("/{login_id}", self.delete, methods=["DELETE"])
+        self.router.add_api_route("/{login_id}", self.update, methods=["put"])
+        self.router.add_api_route("/{login_id}", self.find_by_login_id, methods=["get"])
+        self.router.add_api_route("/login", self.login, methods=["post"])
 
     def login(self, login_dto: LoginDto):
         return self.user_service.login(login_dto)

@@ -1,5 +1,3 @@
-from member.domain.user import User
-from member.dto.user_update_dto import MemberUpdateDto
 from member.repository.user_repository import UserRepository
 from member.service.member_service import MemberService
 

@@ -1,11 +1,7 @@
-from abc import *
-
 from sqlalchemy import select
 
-from common.database import Database
 from common.repository import Repository
 from member.domain.member import Member
-from member.dto.member_create_dto import MemberCreateDto
 
 
 class MemberRepository(Repository):

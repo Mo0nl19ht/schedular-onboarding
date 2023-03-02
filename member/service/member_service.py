@@ -30,7 +30,6 @@ class MemberService(metaclass=ABCMeta):
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="존재하지 않는 id 또는 password 입니다",
-                # headers={"WWW-Authenticate": "Bearer"},
             )
 
         access_token = self.make_access_token(member.login_id)
