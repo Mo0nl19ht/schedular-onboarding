@@ -1,17 +1,53 @@
 from abc import ABCMeta
+from datetime import datetime, timedelta
 
 from fastapi import HTTPException
+from jose import jwt
+from starlette import status
 
 from member.domain.member import Member
 from member.dto.member_create_dto import MemberCreateDto
 from member.dto.member_get_dto import MemberGetDto
 from member.dto.user_update_dto import MemberUpdateDto
 from member.repository.member_repository import MemberRepository
+from security.config.jwt_config import (
+    ACCESS_TOKEN_EXPIRE_MINUTES,
+    SECRET_KEY,
+    ALGORITHM,
+    TOKEN_TYPE,
+)
+from security.dto.login_dto import LoginDto
+from security.dto.token import Token
 
 
 class MemberService(metaclass=ABCMeta):
     def __init__(self, member_repository: MemberRepository):
         self.member_repository = member_repository
+
+    def login(self, login_dto: LoginDto):
+        member = self.member_repository.find_by_login_id(login_dto.login_id)
+        if not member or not member.verify_password(login_dto.password):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="존재하지 않는 id 또는 password 입니다",
+                # headers={"WWW-Authenticate": "Bearer"},
+            )
+
+        access_token = self.make_access_token(member.login_id)
+        s = Token(
+            access_token=access_token,
+            token_type=TOKEN_TYPE,
+            login_id=member.login_id,
+            type=member.type,
+        )
+        return s
+
+    def make_access_token(self, login_id: str):
+        data = {
+            "sub": login_id,
+            "exp": datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES),
+        }
+        return jwt.encode(data, SECRET_KEY, algorithm=ALGORITHM)
 
     def create(self, member_create_dto: MemberCreateDto) -> MemberGetDto:
         self._validate_email(member_create_dto.email)

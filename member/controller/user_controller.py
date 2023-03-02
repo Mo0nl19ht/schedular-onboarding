@@ -1,9 +1,11 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
+from fastapi.security import OAuth2PasswordRequestForm
 from starlette import status
 
 from member.dto.member_create_dto import MemberCreateDto
 from member.dto.user_update_dto import MemberUpdateDto
 from member.service.user_service import UserService
+from security.dto.login_dto import LoginDto
 
 
 #
@@ -33,6 +35,15 @@ class UserController:
             methods=["get"],
             status_code=status.HTTP_200_OK,
         )
+        self.router.add_api_route(
+            "/login",
+            self.login,
+            methods=["post"],
+            status_code=status.HTTP_200_OK,
+        )
+
+    def login(self, login_dto: LoginDto):
+        return self.user_service.login(login_dto)
 
     def create(self, member_create_dto: MemberCreateDto):
         return self.user_service.create(member_create_dto)
