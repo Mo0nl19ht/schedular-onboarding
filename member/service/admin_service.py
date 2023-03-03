@@ -1,6 +1,5 @@
 from member.dto.user_update_dto import MemberUpdateDto
 from member.repository.admin_repository import AdminRepository
-from member.repository.user_repository import UserRepository
 from member.service.member_service import MemberService
 
 
