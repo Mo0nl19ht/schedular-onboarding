@@ -6,11 +6,15 @@ from member.domain.member import Member
 
 class MemberRepository(Repository):
     def create(self, member: Member) -> Member:
-        session = self.get_session()
-        session.add(member)
-        session.commit()
-        session.refresh(member)
-        return member
+        try:
+            session = self.get_session()
+            session.add(member)
+            session.commit()
+            session.refresh(member)
+            return member
+        except Exception as e:
+            session.rollback()
+            return e
 
     def find_by_id(self, member_id: int) -> Member:
         session = self.get_session()
@@ -28,11 +32,19 @@ class MemberRepository(Repository):
         return session.scalars(query).first()
 
     def delete(self, member: Member):
-        session = self.get_session()
-        session.delete(member)
-        session.commit()
+        try:
+            session = self.get_session()
+            session.delete(member)
+            session.commit()
+        except Exception as e:
+            session.rollback()
+            return e
 
     def update(self, member: Member):
-        session = self.get_session()
-        session.commit()
-        session.refresh(member)
+        try:
+            session = self.get_session()
+            session.commit()
+            session.refresh(member)
+        except Exception as e:
+            session.rollback()
+            return e
