@@ -1,8 +1,7 @@
 from fastapi import APIRouter, Depends
-from fastapi.security import OAuth2PasswordRequestForm
-from starlette import status
 
 from member.dto.member_create_dto import MemberCreateDto
+from member.dto.member_get_dto import MemberGetDto
 from member.dto.user_update_dto import MemberUpdateDto
 from member.service.user_service import UserService
 from security.config.jwt_util import get_current_member
@@ -24,7 +23,7 @@ class UserController:
     def login(self, login_dto: LoginDto) -> Jwt:
         return self.user_service.login(login_dto)
 
-    def create(self, member_create_dto: MemberCreateDto):
+    def create(self, member_create_dto: MemberCreateDto) -> MemberGetDto:
         return self.user_service.create(member_create_dto)
 
     def delete(self, login_id: str = Depends(get_current_member)):
@@ -37,5 +36,7 @@ class UserController:
     ) -> Jwt:
         return self.user_service.update(login_id, user_update_dto)
 
-    def find_by_login_id(self, login_id: str = Depends(get_current_member)):
+    def find_by_login_id(
+        self, login_id: str = Depends(get_current_member)
+    ) -> MemberGetDto:
         return self.user_service.find_by_login_id(login_id)

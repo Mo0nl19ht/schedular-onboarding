@@ -24,7 +24,7 @@ class MemberService(metaclass=ABCMeta):
     def __init__(self, member_repository: MemberRepository):
         self.member_repository = member_repository
 
-    def login(self, login_dto: LoginDto):
+    def login(self, login_dto: LoginDto) -> Jwt:
         member = self.member_repository.find_by_login_id(login_dto.login_id)
         if not member or not member.verify_password(login_dto.password):
             raise HTTPException(
@@ -42,7 +42,9 @@ class MemberService(metaclass=ABCMeta):
         return MemberGetDto.from_orm(self.member_repository.create(member))
 
     def delete(self, login_id: str):
-        self.member_repository.delete(login_id)
+        member = self.member_repository.find_by_login_id(login_id)
+        self._validate_member(member)
+        self.member_repository.delete(member)
 
     def find_by_id(self, member_id: int) -> MemberGetDto:
         return MemberGetDto.from_orm(self.member_repository.find_by_id(member_id))
@@ -50,19 +52,25 @@ class MemberService(metaclass=ABCMeta):
     def find_by_login_id(self, login_id: str) -> MemberGetDto:
         return MemberGetDto.from_orm(self.member_repository.find_by_login_id(login_id))
 
-    def update(self, login_id: str, member_update_dto: MemberUpdateDto):
+    def update(self, login_id: str, member_update_dto: MemberUpdateDto) -> Jwt:
         member = self.member_repository.find_by_login_id(login_id)
-        if not member:
-            raise HTTPException(status_code=401, detail="등록된 사용자가 아닙니다")
+        self._validate_for_update(member, member_update_dto)
+        member.update(member_update_dto)
+        self.member_repository.update(member)
+        return self._make_jwt(member)
+
+    def _validate_for_update(self, member, member_update_dto):
+        self._validate_member(member)
         if member.login_id != member_update_dto.login_id:
             self._validate_login_id(member_update_dto.login_id)
         if member.email != member_update_dto.email:
             self._validate_email(member_update_dto.email)
-        member.update(member_update_dto)
-        self.member_repository.update()
-        return self._make_jwt(member)
 
-    def _make_jwt(self, member):
+    def _validate_member(self, member):
+        if not member:
+            raise HTTPException(status_code=401, detail="등록된 사용자가 아닙니다")
+
+    def _make_jwt(self, member) -> Jwt:
         access_token = self._make_access_token(member.login_id)
         return Jwt(
             access_token=access_token,

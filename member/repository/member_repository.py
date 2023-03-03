@@ -27,13 +27,12 @@ class MemberRepository(Repository):
         query = select(Member).filter_by(email=email)
         return session.scalars(query).first()
 
-    def delete(self, login_id: int):
-        member = self.find_by_login_id(login_id)
-        if member:
-            session = self.get_session()
-            session.delete(member)
-            session.commit()
+    def delete(self, member: Member):
+        session = self.get_session()
+        session.delete(member)
+        session.commit()
 
-    def update(self):
+    def update(self, member: Member):
         session = self.get_session()
         session.commit()
+        session.refresh(member)
