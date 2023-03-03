@@ -47,10 +47,14 @@ class MemberService(metaclass=ABCMeta):
         self.member_repository.delete(member)
 
     def find_by_id(self, member_id: int) -> MemberGetDto:
-        return MemberGetDto.from_orm(self.member_repository.find_by_id(member_id))
+        member = self.member_repository.find_by_id(member_id)
+        self._validate_member(member)
+        return MemberGetDto.from_orm(member)
 
     def find_by_login_id(self, login_id: str) -> MemberGetDto:
-        return MemberGetDto.from_orm(self.member_repository.find_by_login_id(login_id))
+        member = self.member_repository.find_by_login_id(login_id)
+        self._validate_member(member)
+        return MemberGetDto.from_orm(member)
 
     def update(self, login_id: str, member_update_dto: MemberUpdateDto) -> Jwt:
         member = self.member_repository.find_by_login_id(login_id)
