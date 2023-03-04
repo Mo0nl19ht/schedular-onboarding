@@ -17,7 +17,7 @@ class UserController:
 
         self.router.add_api_route("", self.create, methods=["POST"])
         self.router.add_api_route(
-            "", self.delete, methods=["DELETE"], status_code=status.HTTP_204_NO_CONTENT
+            "", self.delete, methods=["DELETE"], status_code=status.HTTP_202_ACCEPTED
         )
         self.router.add_api_route("", self.update, methods=["put"])
         self.router.add_api_route("", self.find_by_login_id, methods=["get"])
