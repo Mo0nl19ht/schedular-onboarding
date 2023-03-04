@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends
+from starlette import status
 
 from schedule.dto.schedule_dto import ScheduleDto, ScheduleUpdateDto
 from schedule.dto.schedule_get_dto import ScheduleGetDto
@@ -12,7 +13,12 @@ class ScheduleController:
         self.schedule_service = schedule_service
 
         self.router.add_api_route("", self.create, methods=["POST"])
-        # self.router.add_api_route("", self.delete, methods=["DELETE"])
+        self.router.add_api_route(
+            "/{schedule_id}",
+            self.delete,
+            methods=["DELETE"],
+            status_code=status.HTTP_202_ACCEPTED,
+        )
         self.router.add_api_route("", self.update, methods=["put"])
         # self.router.add_api_route("", self.find_by_login_id, methods=["get"])
 
@@ -29,3 +35,6 @@ class ScheduleController:
         login_id: str = Depends(get_current_member),
     ) -> ScheduleGetDto:
         return self.schedule_service.update(schedule_update_dto, login_id)
+
+    def delete(self, schedule_id: int, login_id: str = Depends(get_current_member)):
+        self.schedule_service.delete(schedule_id, login_id)

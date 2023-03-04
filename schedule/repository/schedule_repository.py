@@ -20,9 +20,9 @@ class ScheduleRepository(Repository):
             session.rollback()
             raise e
 
-    def find_by_start_and_end(self, start: datetime, end: datetime):
+    def find_by_start_and_end(self, start: datetime, end: datetime, user_id: int):
         session = self.get_session()
-        query = select(Schedule).filter_by(start=start, end=end)
+        query = select(Schedule).filter_by(start=start, end=end, user_id=user_id)
         return session.scalar(query)
 
     def find_by_id(self, id: int):
@@ -36,6 +36,15 @@ class ScheduleRepository(Repository):
             session.commit()
             session.refresh(schedule)
             return schedule
+        except Exception as e:
+            session.rollback()
+            raise e
+
+    def delete(self, schedule: Schedule):
+        try:
+            session = self.get_session()
+            session.delete(schedule)
+            session.commit()
         except Exception as e:
             session.rollback()
             raise e

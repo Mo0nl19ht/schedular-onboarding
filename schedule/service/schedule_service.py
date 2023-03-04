@@ -24,7 +24,7 @@ class ScheduleService:
         self._validate_date_format(schedule_dto)
         schedule = Schedule.from_create_dto(schedule_dto, user.id)
         self._validate_date_order(schedule)
-        self._validate_schedule_by_start_end(schedule.start, schedule.end)
+        self._validate_schedule_by_start_end(schedule.start, schedule.end, user.id)
 
         return ScheduleGetDto.from_orm(
             self.schedule_repository.create(schedule), login_id
@@ -45,11 +45,11 @@ class ScheduleService:
 
     def _get_current_user(self, login_id: str):
         user = self.user_repository.find_by_login_id(login_id)
-        self._validate_member(user)
+        self._validate_user(user)
         return user
 
-    def _validate_member(self, member):
-        if not member:
+    def _validate_user(self, user):
+        if not user:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED, detail="등록된 사용자가 아닙니다"
             )
@@ -71,8 +71,10 @@ class ScheduleService:
                 detail="유효하지 않은 시간 형식입니다",
             )
 
-    def _validate_schedule_by_start_end(self, start: datetime, end: datetime):
-        if self.schedule_repository.find_by_start_and_end(start, end):
+    def _validate_schedule_by_start_end(
+        self, start: datetime, end: datetime, user_id: int
+    ):
+        if self.schedule_repository.find_by_start_and_end(start, end, user_id):
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT, detail="이미 존재하는 schedule 입니다"
             )
@@ -81,20 +83,31 @@ class ScheduleService:
         self, schedule: Schedule, schedule_update_dto: ScheduleUpdateDto, user_id: int
     ):
         # 이게 본인의 스케줄인지
+        self._validate_schedule_by_user_id(schedule, user_id)
+        # 원래 일정의 시간과 다르다면 본인의 다른 일정들과 중복되는게 없는지
+        start = datetime.strptime(schedule_update_dto.start, DATE_FORMAT)
+        end = datetime.strptime(schedule_update_dto.end, DATE_FORMAT)
+        if schedule.start != start or schedule.end != end:
+            self._validate_schedule_by_start_end(start, end, user_id)
+
+    def _validate_schedule_by_user_id(self, schedule: Schedule, user_id: int):
         if user_id != schedule.user_id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="다른 사람의 schedule은 접근 불가능 합니다",
             )
-        # 원래 시간과 다르다면 중복되는게 없는지
-        start = datetime.strptime(schedule_update_dto.start, DATE_FORMAT)
-        end = datetime.strptime(schedule_update_dto.end, DATE_FORMAT)
-        print(start, end, schedule.start, schedule.end)
-        if schedule.start != start or schedule.end != end:
-            self._validate_schedule_by_start_end(start, end)
 
     def _validate_schedule(self, schedule: Schedule):
         if not schedule:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, detail="존재하지 않는 schedule입니다"
             )
+
+    def delete(self, schedule_id: int, login_id: str):
+        user = self._get_current_user(login_id)
+
+        schedule = self.schedule_repository.find_by_id(schedule_id)
+        self._validate_schedule(schedule)
+        self._validate_schedule_by_user_id(schedule, user.id)
+
+        self.schedule_repository.delete(schedule)
