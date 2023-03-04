@@ -20,3 +20,18 @@ class ScheduleRepository(Repository):
         session = self.get_session()
         query = select(Schedule).filter_by(start=start, end=end)
         return session.scalar(query)
+
+    def find_by_id(self, id: int):
+        session = self.get_session()
+        query = select(Schedule).filter_by(id=id)
+        return session.scalar(query)
+
+    def update(self, schedule: Schedule) -> Schedule:
+        try:
+            session = self.get_session()
+            session.commit()
+            session.refresh(schedule)
+            return schedule
+        except Exception as e:
+            session.rollback()
+            raise e

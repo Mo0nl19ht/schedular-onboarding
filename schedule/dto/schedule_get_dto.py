@@ -6,6 +6,7 @@ from schedule.domain.schedule import Schedule
 
 
 class ScheduleGetDto(BaseModel):
+    id: int
     title: str
     memo: str
     start: datetime
@@ -18,6 +19,7 @@ class ScheduleGetDto(BaseModel):
     @classmethod
     def from_orm(cls, schedule: Schedule, login_id: str) -> "ScheduleGetDto":
         return cls(
+            id=schedule.id,
             title=schedule.title,
             memo=schedule.memo,
             start=schedule.start,
