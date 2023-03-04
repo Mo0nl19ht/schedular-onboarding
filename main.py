@@ -7,9 +7,11 @@ from member.domain import admin, user, member
 from member.domain.user import User
 from member.repository.user_repository import UserRepository
 from member.service.user_service import UserService
+from schedule.controller.ScheduleController import ScheduleController
 from schedule.domain.schedule import Schedule
 from schedule.domain.status_enum import Status
 from schedule.repository.schedule_repository import ScheduleRepository
+from schedule.service.schedule_service import ScheduleService
 
 db = Database()
 db.make_tables()
@@ -20,8 +22,9 @@ user_service = UserService(user_repository)
 user_controller = UserController(user_service)
 
 schedule_repository = ScheduleRepository(db)
-
-
+schedule_service = ScheduleService(schedule_repository, user_repository)
+schedule_controller = ScheduleController(schedule_service)
+#
 # user = User(
 #     login_id="mm",
 #     email="123@mai.",
@@ -29,7 +32,7 @@ schedule_repository = ScheduleRepository(db)
 #     hashed_password="ASda",
 # )
 # user = user_repository.create(user)
-#
+
 # schedule = Schedule(
 #     title="this is title",
 #     memo="memooemoemoemo",
@@ -37,6 +40,7 @@ schedule_repository = ScheduleRepository(db)
 #     end=datetime(2023, 3, 3, 14, 30),
 #     user=user,
 # )
-# schedule_repository.create(schedule)
+# .create(schedule)
 
 app.include_router(user_controller.router)
+app.include_router(schedule_controller.router)
