@@ -14,7 +14,7 @@ class MemberRepository(Repository):
             return member
         except Exception as e:
             session.rollback()
-            return e
+            raise e
 
     def find_by_id(self, member_id: int) -> Member:
         session = self.get_session()
@@ -38,7 +38,7 @@ class MemberRepository(Repository):
             session.commit()
         except Exception as e:
             session.rollback()
-            return e
+            raise e
 
     def update(self, member: Member):
         try:
@@ -47,4 +47,4 @@ class MemberRepository(Repository):
             session.refresh(member)
         except Exception as e:
             session.rollback()
-            return e
+            raise e
