@@ -4,6 +4,7 @@ from fastapi import FastAPI
 from common.database import Database
 from member.controller.user_controller import UserController
 from member.domain import admin, user, member
+from member.domain.user import User
 from member.repository.user_repository import UserRepository
 from member.service.user_service import UserService
 from schedule.domain.schedule import Schedule
@@ -19,11 +20,22 @@ user_service = UserService(user_repository)
 user_controller = UserController(user_service)
 
 schedule_repository = ScheduleRepository(db)
+
+
+# user = User(
+#     login_id="mm",
+#     email="123@mai.",
+#     name="123",
+#     hashed_password="ASda",
+# )
+# user = user_repository.create(user)
+#
 # schedule = Schedule(
 #     title="this is title",
 #     memo="memooemoemoemo",
 #     start=datetime(2023, 3, 3, 14, 00),
 #     end=datetime(2023, 3, 3, 14, 30),
+#     user=user,
 # )
 # schedule_repository.create(schedule)
 
