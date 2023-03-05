@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends
+from starlette import status
 
 from member.dto.member_create_dto import MemberCreateDto
 from member.dto.member_get_dto import MemberGetDto
@@ -15,7 +16,9 @@ class UserController:
         self.user_service = user_service
 
         self.router.add_api_route("", self.create, methods=["POST"])
-        self.router.add_api_route("", self.delete, methods=["DELETE"])
+        self.router.add_api_route(
+            "", self.delete, methods=["DELETE"], status_code=status.HTTP_202_ACCEPTED
+        )
         self.router.add_api_route("", self.update, methods=["put"])
         self.router.add_api_route("", self.find_by_login_id, methods=["get"])
         self.router.add_api_route("/login", self.login, methods=["post"])
@@ -27,7 +30,7 @@ class UserController:
         return self.user_service.create(member_create_dto)
 
     def delete(self, login_id: str = Depends(get_current_member)):
-        return self.user_service.delete(login_id)
+        self.user_service.delete(login_id)
 
     def update(
         self,
