@@ -3,6 +3,7 @@ from typing import List
 from fastapi import APIRouter, Depends
 from starlette import status
 
+from schedule.domain.period_enum import Period
 from schedule.dto.schedule_dto import ScheduleCreateDto, ScheduleUpdateCreateDto
 from schedule.dto.schedule_get_dto import ScheduleGetDto
 from schedule.service.schedule_service import ScheduleService
@@ -22,7 +23,8 @@ class ScheduleController:
             status_code=status.HTTP_202_ACCEPTED,
         )
         self.router.add_api_route("", self.update, methods=["put"])
-        self.router.add_api_route("", self.find_all_by_status, methods=["get"])
+        self.router.add_api_route("/status", self.find_all_by_status, methods=["get"])
+        self.router.add_api_route("/period", self.find_all_by_period, methods=["get"])
 
     def create(
         self,
@@ -41,12 +43,14 @@ class ScheduleController:
     def delete(self, schedule_id: int, login_id: str = Depends(get_current_member)):
         self.schedule_service.delete(schedule_id, login_id)
 
-    # 1달 단위 조회
-    # 주 단위 조회
-    # 모든 일정 조회
-    # 시작일자로 정렬
-    # 페이징?
     def find_all_by_status(
         self, status_value: str, login_id: str = Depends(get_current_member)
     ) -> List[ScheduleGetDto]:
         return self.schedule_service.find_all_by_status(status_value, login_id)
+
+    # 여기서 Period가 타입 체킹하는데 에러 잡아주긴함
+    # 이거는 처리를 어캐해야하지 그냥 service에서 에러 처리해야하나
+    def find_all_by_period(
+        self, value: Period, login_id: str = Depends(get_current_member)
+    ):
+        return self.schedule_service.find_all_by_period(value, login_id)

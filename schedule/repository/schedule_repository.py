@@ -1,8 +1,8 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import List
 
 from fastapi import Depends
-from sqlalchemy import select
+from sqlalchemy import select, extract, or_, and_
 
 from common.database import Database
 from common.repository import Repository
@@ -57,5 +57,51 @@ class ScheduleRepository(Repository):
             select(Schedule)
             .filter_by(status=status_value, user=user)
             .order_by(Schedule.start, Schedule.end)
+        )
+        return session.scalars(query).all()
+
+    def find_all_by_period_weekly(self, user) -> List[Schedule]:
+        session = self.get_session()
+        today = datetime.now().date()
+        # Calculate the day of the week as an integer (0=Monday, 1=Tuesday, etc.)
+        weekday = today.weekday()
+        start_date = today - timedelta(days=weekday)
+        end_date = today + timedelta(days=(7 - weekday - 1))
+        query = (
+            select(Schedule)
+            .filter(Schedule.start.between(start_date, end_date), Schedule.user == user)
+            .order_by(Schedule.start, Schedule.end)
+        )
+        return session.scalars(query).all()
+
+    def find_all_by_period_monthly(self, user) -> List[Schedule]:
+        session = self.get_session()
+        query = (
+            select(Schedule)
+            .filter(
+                self._is_in_this_month(),
+                Schedule.user == user,
+            )
+            .order_by(Schedule.start, Schedule.end)
+        )
+        return session.scalars(query).all()
+
+    def _is_in_this_month(self):
+        today = datetime.now().date()
+        return or_(
+            and_(
+                extract("month", Schedule.start) == today.month,
+                extract("year", Schedule.start) == today.year,
+            ),
+            and_(
+                extract("month", Schedule.end) == today.month,
+                extract("year", Schedule.end) == today.year,
+            ),
+        )
+
+    def find_all_by_user(self, user) -> List[Schedule]:
+        session = self.get_session()
+        query = (
+            select(Schedule).filter_by(user=user).order_by(Schedule.start, Schedule.end)
         )
         return session.scalars(query).all()

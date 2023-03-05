@@ -6,6 +6,7 @@ from starlette import status
 
 from member.repository.user_repository import UserRepository
 from schedule.common.config import DATE_FORMAT
+from schedule.domain.period_enum import Period
 from schedule.domain.schedule import Schedule
 from schedule.domain import status_enum
 from schedule.dto.schedule_dto import ScheduleCreateDto, ScheduleUpdateCreateDto
@@ -124,13 +125,29 @@ class ScheduleService:
     ) -> List[ScheduleGetDto]:
         self._validate_status(status_value)
         user = self._get_current_user(login_id)
-        scheduels = []
-        for scheduel in self.schedule_repository.find_all_by_status(status_value, user):
-            scheduels.append(ScheduleGetDto.from_orm(scheduel, login_id))
-        return scheduels
+        schedules = self.schedule_repository.find_all_by_status(status_value, user)
+        return self._to_schedule_get_dto_list(login_id, schedules)
+
+    def _to_schedule_get_dto_list(self, login_id, schedules: List[Schedule]):
+        dto_list = []
+        for schedule in schedules:
+            dto_list.append(ScheduleGetDto.from_orm(schedule, login_id))
+        return dto_list
 
     def _validate_status(self, status_value):
         if not status_enum.is_in(status_value):
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, detail="존재하지 않는 status 입니다"
             )
+
+    def find_all_by_period(self, period: Period, login_id: str) -> List[ScheduleGetDto]:
+        user = self._get_current_user(login_id)
+        match period:
+            case Period.WEEKLY:
+                schedules = self.schedule_repository.find_all_by_period_weekly(user)
+            case Period.MONTHLY:
+                schedules = self.schedule_repository.find_all_by_period_monthly(user)
+            case Period.ALL:
+                schedules = self.schedule_repository.find_all_by_user(user)
+
+        return self._to_schedule_get_dto_list(login_id, schedules)
