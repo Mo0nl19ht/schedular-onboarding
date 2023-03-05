@@ -3,7 +3,7 @@ from datetime import datetime
 from pydantic import BaseModel
 
 
-class ScheduleDto(BaseModel):
+class ScheduleCreateDto(BaseModel):
     title: str
     memo: str
     # yyyymmddhhmm
@@ -11,5 +11,5 @@ class ScheduleDto(BaseModel):
     end: str
 
 
-class ScheduleUpdateDto(ScheduleDto):
+class ScheduleUpdateCreateDto(ScheduleCreateDto):
     id: int

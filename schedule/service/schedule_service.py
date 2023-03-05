@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import List
 
 from fastapi import Depends, HTTPException
 from starlette import status
@@ -6,7 +7,8 @@ from starlette import status
 from member.repository.user_repository import UserRepository
 from schedule.common.config import DATE_FORMAT
 from schedule.domain.schedule import Schedule
-from schedule.dto.schedule_dto import ScheduleDto, ScheduleUpdateDto
+from schedule.domain import status_enum
+from schedule.dto.schedule_dto import ScheduleCreateDto, ScheduleUpdateCreateDto
 from schedule.dto.schedule_get_dto import ScheduleGetDto
 from schedule.repository.schedule_repository import ScheduleRepository
 
@@ -18,7 +20,7 @@ class ScheduleService:
         self.user_repository = user_repository
         self.schedule_repository = schedule_repository
 
-    def create(self, schedule_dto: ScheduleDto, login_id: str) -> ScheduleGetDto:
+    def create(self, schedule_dto: ScheduleCreateDto, login_id: str) -> ScheduleGetDto:
         user = self._get_current_user(login_id)
 
         self._validate_date_format(schedule_dto)
@@ -30,7 +32,9 @@ class ScheduleService:
             self.schedule_repository.create(schedule), login_id
         )
 
-    def update(self, schedule_update_dto: ScheduleUpdateDto, login_id: str) -> Schedule:
+    def update(
+        self, schedule_update_dto: ScheduleUpdateCreateDto, login_id: str
+    ) -> Schedule:
         user = self._get_current_user(login_id)
         schedule = self.schedule_repository.find_by_id(schedule_update_dto.id)
 
@@ -61,7 +65,7 @@ class ScheduleService:
                 detail="일정 시작이 완료 보다 선행 되어야 합니다",
             )
 
-    def _validate_date_format(self, schedule_dto: ScheduleDto):
+    def _validate_date_format(self, schedule_dto: ScheduleCreateDto):
         try:
             datetime.strptime(schedule_dto.start, DATE_FORMAT)
             datetime.strptime(schedule_dto.end, DATE_FORMAT)
@@ -80,7 +84,10 @@ class ScheduleService:
             )
 
     def _validate_for_update(
-        self, schedule: Schedule, schedule_update_dto: ScheduleUpdateDto, user_id: int
+        self,
+        schedule: Schedule,
+        schedule_update_dto: ScheduleUpdateCreateDto,
+        user_id: int,
     ):
         # 이게 본인의 스케줄인지
         self._validate_schedule_by_user_id(schedule, user_id)
@@ -111,3 +118,19 @@ class ScheduleService:
         self._validate_schedule_by_user_id(schedule, user.id)
 
         self.schedule_repository.delete(schedule)
+
+    def find_all_by_status(
+        self, status_value: str, login_id: str
+    ) -> List[ScheduleGetDto]:
+        self._validate_status(status_value)
+        user = self._get_current_user(login_id)
+        scheduels = []
+        for scheduel in self.schedule_repository.find_all_by_status(status_value, user):
+            scheduels.append(ScheduleGetDto.from_orm(scheduel, login_id))
+        return scheduels
+
+    def _validate_status(self, status_value):
+        if not status_enum.is_in(status_value):
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="존재하지 않는 status 입니다"
+            )

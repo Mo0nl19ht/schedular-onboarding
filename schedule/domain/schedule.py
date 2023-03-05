@@ -9,7 +9,7 @@ from common.base_entity import BaseEntity
 from member.domain.user import User
 from schedule.common.config import DATE_FORMAT
 from schedule.domain.status_enum import Status
-from schedule.dto.schedule_dto import ScheduleDto, ScheduleUpdateDto
+from schedule.dto.schedule_dto import ScheduleCreateDto, ScheduleUpdateCreateDto
 
 
 class Schedule(BaseEntity):
@@ -25,7 +25,9 @@ class Schedule(BaseEntity):
     user = relationship("User", back_populates="schedules")
 
     @classmethod
-    def from_create_dto(cls, schedule_dto: ScheduleDto, user_id: str) -> "Schedule":
+    def from_create_dto(
+        cls, schedule_dto: ScheduleCreateDto, user_id: str
+    ) -> "Schedule":
         schedule = cls(
             title=schedule_dto.title,
             memo=schedule_dto.memo,
@@ -37,7 +39,7 @@ class Schedule(BaseEntity):
         schedule._set_status()
         return schedule
 
-    def update(self, schedule_update_dto: ScheduleUpdateDto):
+    def update(self, schedule_update_dto: ScheduleUpdateCreateDto):
         self.title = schedule_update_dto.title
         self.memo = schedule_update_dto.memo
         self.start = self._transfrom_to_datetime(schedule_update_dto.start)

@@ -7,7 +7,7 @@ from member.domain import admin, user, member
 from member.domain.user import User
 from member.repository.user_repository import UserRepository
 from member.service.user_service import UserService
-from schedule.controller.ScheduleController import ScheduleController
+from schedule.controller.schedule_controller import ScheduleController
 from schedule.domain.schedule import Schedule
 from schedule.domain.status_enum import Status
 from schedule.repository.schedule_repository import ScheduleRepository

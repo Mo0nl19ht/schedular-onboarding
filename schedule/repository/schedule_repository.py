@@ -1,10 +1,12 @@
 from datetime import datetime
+from typing import List
 
 from fastapi import Depends
 from sqlalchemy import select
 
 from common.database import Database
 from common.repository import Repository
+from member.domain.user import User
 from schedule.domain.schedule import Schedule
 
 
@@ -48,3 +50,12 @@ class ScheduleRepository(Repository):
         except Exception as e:
             session.rollback()
             raise e
+
+    def find_all_by_status(self, status_value, user: User) -> List[Schedule]:
+        session = self.get_session()
+        query = (
+            select(Schedule)
+            .filter_by(status=status_value, user=user)
+            .order_by(Schedule.start, Schedule.end)
+        )
+        return session.scalars(query).all()
