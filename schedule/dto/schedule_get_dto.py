@@ -12,6 +12,7 @@ class ScheduleGetDto(BaseModel):
     start: datetime
     end: datetime
     login_id: str
+    status: str
 
     class Config:
         orm_mode = True
@@ -25,4 +26,5 @@ class ScheduleGetDto(BaseModel):
             start=schedule.start,
             end=schedule.end,
             login_id=login_id,
+            status=schedule.status,
         )

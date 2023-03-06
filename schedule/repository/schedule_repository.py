@@ -6,6 +6,7 @@ from sqlalchemy import select, extract, or_, and_
 from common.repository import Repository
 from member.domain.user import User
 from schedule.domain.schedule import Schedule
+from schedule.enum.status import Status
 
 
 class ScheduleRepository(Repository):
@@ -67,7 +68,13 @@ class ScheduleRepository(Repository):
         end_date = today + timedelta(days=(7 - weekday - 1))
         query = (
             select(Schedule)
-            .filter(Schedule.start.between(start_date, end_date), Schedule.user == user)
+            .filter(
+                or_(
+                    Schedule.start.between(start_date, end_date),
+                    Schedule.status == Status.IN_PROGRESS.value,
+                ),
+                Schedule.user == user,
+            )
             .order_by(Schedule.start, Schedule.end)
         )
         return session.scalars(query).all()
@@ -102,4 +109,5 @@ class ScheduleRepository(Repository):
                 extract("month", Schedule.end) == today.month,
                 extract("year", Schedule.end) == today.year,
             ),
+            Schedule.status == Status.IN_PROGRESS.value,
         )
