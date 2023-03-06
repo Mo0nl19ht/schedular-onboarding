@@ -45,6 +45,7 @@ class MemberRepository(Repository):
             session = self.get_session()
             session.commit()
             session.refresh(member)
+            return member
         except Exception as e:
             session.rollback()
             raise e

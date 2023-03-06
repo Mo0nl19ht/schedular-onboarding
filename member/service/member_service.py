@@ -42,8 +42,7 @@ class MemberService(metaclass=ABCMeta):
         return MemberGetDto.from_orm(self.member_repository.create(member))
 
     def delete(self, login_id: str):
-        member = self.member_repository.find_by_login_id(login_id)
-        self._validate_member(member)
+        member = self._get_current_member(login_id)
         self.member_repository.delete(member)
 
     def find_by_id(self, member_id: int) -> MemberGetDto:
@@ -51,20 +50,23 @@ class MemberService(metaclass=ABCMeta):
         self._validate_member(member)
         return MemberGetDto.from_orm(member)
 
-    def find_by_login_id(self, login_id: str) -> MemberGetDto:
-        member = self.member_repository.find_by_login_id(login_id)
-        self._validate_member(member)
+    def find_me(self, login_id: str) -> MemberGetDto:
+        member = self._get_current_member(login_id)
         return MemberGetDto.from_orm(member)
 
-    def update(self, login_id: str, member_update_dto: MemberUpdateDto) -> Jwt:
+    def _get_current_member(self, login_id):
         member = self.member_repository.find_by_login_id(login_id)
+        self._validate_member(member)
+        return member
+
+    def update(self, login_id: str, member_update_dto: MemberUpdateDto) -> Jwt:
+        member = self._get_current_member(login_id)
         self._validate_for_update(member, member_update_dto)
         member.update(member_update_dto)
         self.member_repository.update(member)
         return self._make_jwt(member)
 
     def _validate_for_update(self, member, member_update_dto):
-        self._validate_member(member)
         if member.login_id != member_update_dto.login_id:
             self._validate_login_id(member_update_dto.login_id)
         if member.email != member_update_dto.email:
@@ -72,7 +74,9 @@ class MemberService(metaclass=ABCMeta):
 
     def _validate_member(self, member):
         if not member:
-            raise HTTPException(status_code=401, detail="등록된 사용자가 아닙니다")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED, detail="등록된 사용자가 아닙니다"
+            )
 
     def _make_jwt(self, member) -> Jwt:
         access_token = self._make_access_token(member.login_id)

@@ -6,4 +6,6 @@ from member.domain.member import Member
 class User(Member):
     __mapper_args__ = {"polymorphic_identity": "user"}
 
-    schedules = relationship("Schedule", back_populates="user")
+    schedules = relationship(
+        "Schedule", back_populates="user", cascade="all, delete-orphan"
+    )
