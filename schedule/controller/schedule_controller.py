@@ -3,7 +3,7 @@ from typing import List
 from fastapi import APIRouter, Depends
 from starlette import status
 
-from schedule.domain.period_enum import Period
+from schedule.enum.period import Period
 from schedule.dto.schedule_dto import ScheduleCreateDto, ScheduleUpdateCreateDto
 from schedule.dto.schedule_get_dto import ScheduleGetDto
 from schedule.service.schedule_service import ScheduleService

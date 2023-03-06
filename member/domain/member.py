@@ -33,10 +33,10 @@ class Member(BaseEntity):
     def verify_password(self, password: str):
         return self._pwd_context.verify(password, self.hashed_password)
 
-    def _hash_password(self, password: str):
-        return self._pwd_context.hash(password)
-
     def update(self, member_update_dto: MemberUpdateDto):
         self.login_id = member_update_dto.login_id
         self.email = member_update_dto.email
         self.name = member_update_dto.name
+
+    def _hash_password(self, password: str):
+        return self._pwd_context.hash(password)

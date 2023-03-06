@@ -1,14 +1,14 @@
 from datetime import datetime
 from typing import List
 
-from fastapi import Depends, HTTPException
+from fastapi import HTTPException
 from starlette import status
 
 from member.repository.user_repository import UserRepository
 from schedule.common.config import DATE_FORMAT
-from schedule.domain.period_enum import Period
+from schedule.enum.period import Period
 from schedule.domain.schedule import Schedule
-from schedule.domain import status_enum
+from schedule.enum.status import is_in_status
 from schedule.dto.schedule_dto import ScheduleCreateDto, ScheduleUpdateCreateDto
 from schedule.dto.schedule_get_dto import ScheduleGetDto
 from schedule.repository.schedule_repository import ScheduleRepository
@@ -48,10 +48,45 @@ class ScheduleService:
             self.schedule_repository.update(schedule), login_id
         )
 
+    def find_all_by_period(self, period: Period, login_id: str) -> List[ScheduleGetDto]:
+        user = self._get_current_user(login_id)
+        match period:
+            case Period.WEEKLY:
+                schedules = self.schedule_repository.find_all_by_period_weekly(user)
+            case Period.MONTHLY:
+                schedules = self.schedule_repository.find_all_by_period_monthly(user)
+            case Period.ALL:
+                schedules = self.schedule_repository.find_all_by_user(user)
+
+        return self._to_schedule_get_dto_list(login_id, schedules)
+
+    def delete(self, schedule_id: int, login_id: str):
+        user = self._get_current_user(login_id)
+
+        schedule = self.schedule_repository.find_by_id(schedule_id)
+        self._validate_schedule(schedule)
+        self._validate_schedule_by_user_id(schedule, user.id)
+
+        self.schedule_repository.delete(schedule)
+
+    def find_all_by_status(
+        self, status_value: str, login_id: str
+    ) -> List[ScheduleGetDto]:
+        self._validate_status(status_value)
+        user = self._get_current_user(login_id)
+        schedules = self.schedule_repository.find_all_by_status(status_value, user)
+        return self._to_schedule_get_dto_list(login_id, schedules)
+
     def _get_current_user(self, login_id: str):
         user = self.user_repository.find_by_login_id(login_id)
         self._validate_user(user)
         return user
+
+    def _to_schedule_get_dto_list(self, login_id, schedules: List[Schedule]):
+        dto_list = []
+        for schedule in schedules:
+            dto_list.append(ScheduleGetDto.from_orm(schedule, login_id))
+        return dto_list
 
     def _validate_user(self, user):
         if not user:
@@ -111,43 +146,8 @@ class ScheduleService:
                 status_code=status.HTTP_404_NOT_FOUND, detail="존재하지 않는 schedule입니다"
             )
 
-    def delete(self, schedule_id: int, login_id: str):
-        user = self._get_current_user(login_id)
-
-        schedule = self.schedule_repository.find_by_id(schedule_id)
-        self._validate_schedule(schedule)
-        self._validate_schedule_by_user_id(schedule, user.id)
-
-        self.schedule_repository.delete(schedule)
-
-    def find_all_by_status(
-        self, status_value: str, login_id: str
-    ) -> List[ScheduleGetDto]:
-        self._validate_status(status_value)
-        user = self._get_current_user(login_id)
-        schedules = self.schedule_repository.find_all_by_status(status_value, user)
-        return self._to_schedule_get_dto_list(login_id, schedules)
-
-    def _to_schedule_get_dto_list(self, login_id, schedules: List[Schedule]):
-        dto_list = []
-        for schedule in schedules:
-            dto_list.append(ScheduleGetDto.from_orm(schedule, login_id))
-        return dto_list
-
     def _validate_status(self, status_value):
-        if not status_enum.is_in(status_value):
+        if not is_in_status(status_value):
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, detail="존재하지 않는 status 입니다"
             )
-
-    def find_all_by_period(self, period: Period, login_id: str) -> List[ScheduleGetDto]:
-        user = self._get_current_user(login_id)
-        match period:
-            case Period.WEEKLY:
-                schedules = self.schedule_repository.find_all_by_period_weekly(user)
-            case Period.MONTHLY:
-                schedules = self.schedule_repository.find_all_by_period_monthly(user)
-            case Period.ALL:
-                schedules = self.schedule_repository.find_all_by_user(user)
-
-        return self._to_schedule_get_dto_list(login_id, schedules)

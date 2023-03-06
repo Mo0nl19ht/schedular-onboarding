@@ -24,6 +24,7 @@ class AdminController(MemberController):
         self.router.add_api_route("", self.find_me, methods=["get"])
         self.router.add_api_route("/login", self.login, methods=["post"])
 
+        # user 관리 api
         self.router.add_api_route("/users", self.find_all_user, methods=["get"])
         self.router.add_api_route(
             "/users/{user_id}", self.find_user_by_login_id, methods=["get"]

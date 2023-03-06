@@ -1,7 +1,5 @@
-from sqlalchemy import select
-
 from common.database import Database
-from member.domain.user import User
+
 from member.repository.member_repository import MemberRepository
 
 

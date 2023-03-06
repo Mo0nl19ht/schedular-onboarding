@@ -1,10 +1,8 @@
 from datetime import datetime, timedelta
 from typing import List
 
-from fastapi import Depends
 from sqlalchemy import select, extract, or_, and_
 
-from common.database import Database
 from common.repository import Repository
 from member.domain.user import User
 from schedule.domain.schedule import Schedule
@@ -86,6 +84,13 @@ class ScheduleRepository(Repository):
         )
         return session.scalars(query).all()
 
+    def find_all_by_user(self, user) -> List[Schedule]:
+        session = self.get_session()
+        query = (
+            select(Schedule).filter_by(user=user).order_by(Schedule.start, Schedule.end)
+        )
+        return session.scalars(query).all()
+
     def _is_in_this_month(self):
         today = datetime.now().date()
         return or_(
@@ -98,10 +103,3 @@ class ScheduleRepository(Repository):
                 extract("year", Schedule.end) == today.year,
             ),
         )
-
-    def find_all_by_user(self, user) -> List[Schedule]:
-        session = self.get_session()
-        query = (
-            select(Schedule).filter_by(user=user).order_by(Schedule.start, Schedule.end)
-        )
-        return session.scalars(query).all()

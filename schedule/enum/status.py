@@ -7,7 +7,7 @@ class Status(Enum):
     COMPLETED = "completed"
 
 
-def is_in(str_value: str) -> bool:
+def is_in_status(str_value: str) -> bool:
     for status in Status:
         if str_value == status.value:
             return True

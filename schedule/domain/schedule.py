@@ -1,14 +1,13 @@
 from datetime import datetime
 
-from fastapi import HTTPException
+
 from sqlalchemy import Column, String, Text, DateTime, Integer, ForeignKey
 from sqlalchemy.orm import relationship
-from starlette import status
 
 from common.base_entity import BaseEntity
-from member.domain.user import User
 from schedule.common.config import DATE_FORMAT
-from schedule.domain.status_enum import Status
+
+from schedule.enum.status import Status
 from schedule.dto.schedule_dto import ScheduleCreateDto, ScheduleUpdateCreateDto
 
 

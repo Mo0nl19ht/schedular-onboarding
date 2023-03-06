@@ -54,17 +54,17 @@ class MemberService(metaclass=ABCMeta):
         member = self._get_current_member(login_id)
         return MemberGetDto.from_orm(member)
 
-    def _get_current_member(self, login_id):
-        member = self.member_repository.find_by_login_id(login_id)
-        self._validate_member(member)
-        return member
-
     def update(self, login_id: str, member_update_dto: MemberUpdateDto) -> Jwt:
         member = self._get_current_member(login_id)
         self._validate_for_update(member, member_update_dto)
         member.update(member_update_dto)
         self.member_repository.update(member)
         return self._make_jwt(member)
+
+    def _get_current_member(self, login_id):
+        member = self.member_repository.find_by_login_id(login_id)
+        self._validate_member(member)
+        return member
 
     def _validate_for_update(self, member, member_update_dto):
         if member.login_id != member_update_dto.login_id:
